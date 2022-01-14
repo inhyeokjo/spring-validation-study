@@ -88,6 +88,28 @@ public class ValidationItemControllerV2 {
 		return "redirect:/validation/v2/items/{itemId}";
 	}
 
+	private void getSpringBindingResult(Item item, BindingResult bindingResult) {
+		//검증 오류 결과 보관
+		if (!StringUtils.hasText(item.getItemName())) {
+			bindingResult.addError(new FieldError("item", "itemName", item.getItemName(), false, new String[]{"required.item.itemName"}, null, null));
+		}
+		if (item.getPrice() == null || item.getPrice() < 1000 || item.getPrice() > 1000000) {
+			bindingResult.addError(new FieldError("item", "price", item.getPrice(), false, new String[]{"range.item.price"}, new Object[]{1000, 1000000}, null));
+		}
+		if (item.getQuantity() == null || item.getQuantity() >= 9999) {
+			bindingResult.addError(
+					new FieldError("item", "quantity", item.getQuantity(), false, new String[] {"max.item.quantity"}, new Object[] {9999}, null));
+		}
+
+		//특정 필드가 아닌 복합 룰 검증
+		if (item.getPrice() != null && item.getQuantity() != null) {
+			int resultPrice = item.getPrice() * item.getQuantity();
+			if (resultPrice < 10000) {
+				bindingResult.addError(new ObjectError("item", new String[]{"totalPriceMin"}, new Object[]{10000, resultPrice}, null));
+			}
+		}
+	}
+
 	private Map<String, String> getFormErrors(Item item) {
 		//검증 오류 결과 보관
 		Map<String, String> errors = new HashMap<>();
@@ -102,27 +124,6 @@ public class ValidationItemControllerV2 {
 			errors.put("quantity", "수량은 최대 9,999 까지 허용합니다.");
 		}
 		return errors;
-	}
-
-	private void getSpringBindingResult(Item item, BindingResult bindingResult) {
-		//검증 오류 결과 보관
-		if (!StringUtils.hasText(item.getItemName())) {
-			bindingResult.addError(new FieldError("item", "itemName", item.getItemName(), false, null, null, "상품 이름은 필수 입니다."));
-		}
-		if (item.getPrice() == null || item.getPrice() < 1000 || item.getPrice() > 1000000) {
-			bindingResult.addError(new FieldError("item", "price", item.getPrice(), false, null, null, "가격은 1,000~1,000,000까지 허용합니다."));
-		}
-		if (item.getQuantity() == null || item.getQuantity() >= 9999) {
-			bindingResult.addError(new FieldError("item", "quantity", item.getQuantity(), false, null, null, "수량은 최대 9,999 까지 허용합니다."));
-		}
-
-		//특정 필드가 아닌 복합 룰 검증
-		if (item.getPrice() != null && item.getQuantity() != null) {
-			int resultPrice = item.getPrice() * item.getQuantity();
-			if (resultPrice < 10000) {
-				bindingResult.addError(new ObjectError("item", "가격 * 수량의 합은 10000이상이어야 합니다. 현재 값 = " + resultPrice));
-			}
-		}
 	}
 }
 
