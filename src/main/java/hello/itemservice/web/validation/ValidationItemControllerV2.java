@@ -1,14 +1,14 @@
 package hello.itemservice.web.validation;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.util.StringUtils;
 import org.springframework.validation.BindingResult;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.InitBinder;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -27,6 +27,12 @@ import lombok.extern.slf4j.Slf4j;
 public class ValidationItemControllerV2 {
 
 	private final ItemRepository itemRepository;
+	private final ItemValidator itemValidator;
+
+	@InitBinder
+	public void init(WebDataBinder dataBinder) {
+		dataBinder.addValidators(itemValidator);
+	}
 
 	@GetMapping
 	public String items(Model model) {
@@ -49,9 +55,11 @@ public class ValidationItemControllerV2 {
 	}
 
 	@PostMapping("/add")
-	public String addItemV1(@ModelAttribute Item item, BindingResult bindingResult,
+	public String addItemV1(@Validated @ModelAttribute Item item, BindingResult bindingResult,
 			RedirectAttributes redirectAttributes) {
-		getSpringBindingResult(item, bindingResult);
+		if (itemValidator.supports(Item.class)) {
+			itemValidator.validate(item, bindingResult);
+		}
 		//검증에 실패하면 다시 입력 폼으로
 		if (bindingResult.hasErrors()) {
 			log.info("bindingResult = {}", bindingResult);
@@ -59,7 +67,6 @@ public class ValidationItemControllerV2 {
 		}
 
 		//검증에 성공한 로직
-
 		Item savedItem = itemRepository.save(item);
 		redirectAttributes.addAttribute("itemId", savedItem.getId());
 		redirectAttributes.addAttribute("status", true);
@@ -75,8 +82,9 @@ public class ValidationItemControllerV2 {
 
 	@PostMapping("/{itemId}/edit")
 	public String edit(@PathVariable Long itemId, @ModelAttribute Item item, BindingResult bindingResult, Model model) {
-		getSpringBindingResult(item, bindingResult);
-
+		if (itemValidator.supports(Item.class)) {
+			itemValidator.validate(item, bindingResult);
+		}
 		//검증에 실패하면 다시 입력 폼으로
 		if (bindingResult.hasErrors()) {
 			log.info("bindingResult = {}", bindingResult);
@@ -86,43 +94,4 @@ public class ValidationItemControllerV2 {
 		itemRepository.update(itemId, item);
 		return "redirect:/validation/v2/items/{itemId}";
 	}
-
-	private void getSpringBindingResult(Item item, BindingResult bindingResult) {
-		//검증 오류 결과 보관
-		// ValidationUtils.rejectIfEmptyOrWhitespace(bindingResult, "itemName", "required");
-		if (!StringUtils.hasText(item.getItemName())) {
-			bindingResult.rejectValue("itemName", "required");
-		}
-		if (item.getPrice() == null || item.getPrice() < 1000 || item.getPrice() > 1000000) {
-			bindingResult.rejectValue("price", "range", new Object[] {1000, 1000000}, null);
-		}
-		if (item.getQuantity() == null || item.getQuantity() >= 9999) {
-			bindingResult.rejectValue("quantity", "max", new Object[] {9999}, null);
-		}
-
-		//특정 필드가 아닌 복합 룰 검증
-		if (item.getPrice() != null && item.getQuantity() != null) {
-			int resultPrice = item.getPrice() * item.getQuantity();
-			if (resultPrice < 10000) {
-				bindingResult.reject("totalPriceMin", new Object[] {10000, resultPrice}, null);
-			}
-		}
-	}
-
-	private Map<String, String> getFormErrors(Item item) {
-		//검증 오류 결과 보관
-		Map<String, String> errors = new HashMap<>();
-
-		if (!StringUtils.hasText(item.getItemName())) {
-			errors.put("itemName", "상품 이름은 필수입니다.");
-		}
-		if (item.getPrice() == null || item.getPrice() < 1000 || item.getPrice() > 1000000) {
-			errors.put("price", "가격은 1,000~1,000,000까지 허용합니다.");
-		}
-		if (item.getQuantity() == null || item.getQuantity() >= 9999) {
-			errors.put("quantity", "수량은 최대 9,999 까지 허용합니다.");
-		}
-		return errors;
-	}
 }
-
