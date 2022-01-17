@@ -12,18 +12,18 @@ import lombok.Data;
 // @ScriptAssert(lang = "javascript", script = "_this.price * _this.quantity >= 10000", message = "총 합이 10000원 넘게 입력해주세요")
 public class Item {
 
-	@NotNull(groups = UpdateCheck.class) //수정 요구사항 추가
+	// @NotNull(groups = UpdateCheck.class) //수정 요구사항 추가
 	private Long id;
 
-	@NotBlank(groups = {UpdateCheck.class, SaveCheck.class})
+	// @NotBlank(groups = {UpdateCheck.class, SaveCheck.class})
 	private String itemName;
 
-	@NotNull(groups = {UpdateCheck.class, SaveCheck.class})
-	@Range(min = 1000, max = 1000000, groups = {UpdateCheck.class, SaveCheck.class})
+	// @NotNull(groups = {UpdateCheck.class, SaveCheck.class})
+	// @Range(min = 1000, max = 1000000, groups = {UpdateCheck.class, SaveCheck.class})
 	private Integer price;
 
-	@NotNull(groups = {UpdateCheck.class, SaveCheck.class})
-	@Max(value = 9999, groups = SaveCheck.class) //수정 요구사항 추가
+	// @NotNull(groups = {UpdateCheck.class, SaveCheck.class})
+	// @Max(value = 9999, groups = SaveCheck.class) //수정 요구사항 추가
 	private Integer quantity;
 
 	public Item() {
