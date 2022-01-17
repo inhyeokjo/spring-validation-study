@@ -17,6 +17,8 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import hello.itemservice.domain.item.Item;
 import hello.itemservice.domain.item.ItemRepository;
+import hello.itemservice.domain.item.SaveCheck;
+import hello.itemservice.domain.item.UpdateCheck;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -35,7 +37,7 @@ public class ValidationItemControllerV3 {
 	}
 
 	@PostMapping("/add")
-	public String addItem(@Validated @ModelAttribute Item item, BindingResult bindingResult,
+	public String addItem(@Validated(SaveCheck.class) @ModelAttribute Item item, BindingResult bindingResult,
 			RedirectAttributes redirectAttributes) {
 
 		//특정 필드가 아닌 복합 룰 검증
@@ -81,7 +83,7 @@ public class ValidationItemControllerV3 {
 	}
 
 	@PostMapping("/{itemId}/edit")
-	public String edit(@PathVariable Long itemId, @Validated @ModelAttribute Item item, BindingResult bindingResult) {
+	public String edit(@PathVariable Long itemId, @Validated(UpdateCheck.class) @ModelAttribute Item item, BindingResult bindingResult) {
 		//특정 필드가 아닌 복합 룰 검증
 		if (item.getPrice() != null && item.getQuantity() != null) {
 			int resultPrice = item.getPrice() * item.getQuantity();
